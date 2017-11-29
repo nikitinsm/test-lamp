@@ -12,14 +12,12 @@ signal_received = False
 
 @click.group()
 @click.option('--debug/--no-debug', default=False)
-@click.pass_context
-def cli(ctx, debug):
+def cli(debug):
     pass
 
 
 @cli.command()
-@click.pass_context
-def client(ctx):
+def client():
     lamp_client.listen(8888)
 
     def register_signal(sig, frame):
@@ -43,8 +41,7 @@ def client(ctx):
 
 
 @cli.command()
-@click.pass_context
-def server(ctx):
+def server():
     lamp_server = LampServer()
     lamp_server.listen(9999)
     setattr(storage, 'lamp_server', lamp_server)
@@ -53,4 +50,4 @@ def server(ctx):
 
 
 if __name__ == '__main__':
-    cli(obj={})
+    cli()

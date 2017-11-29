@@ -9,6 +9,3 @@ COPY ./ /tmp/lamp/
 WORKDIR /tmp/lamp
 
 RUN python setup.py install
-
-
-
