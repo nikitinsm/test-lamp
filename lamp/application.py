@@ -9,7 +9,6 @@ from datetime import datetime
 from tornado import web, websocket, gen, ioloop
 from tornado.iostream import StreamClosedError
 
-from tornado.tcpclient import TCPClient
 from tornado.tcpserver import TCPServer
 
 from lamp.utils import storage, tcp_client
