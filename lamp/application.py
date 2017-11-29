@@ -58,11 +58,13 @@ class LampProtocol(object):
     @staticmethod
     def process(command, value=None):
         if command not in LampProtocol.command_reversed:
-            return None
+            return None, None
+
         command_name = LampProtocol.command_reversed[command]
         command, length, to_bytes, from_bytes = LampProtocol.command[command_name]
         if callable(from_bytes):
             value = from_bytes(value)
+
         return command_name, value
 
 
@@ -114,9 +116,11 @@ def tcp_client_coroutine():
                 value = yield stream.read_bytes(length)
             log([command, length, value])
             command, value = LampProtocol.process(command, value)
-            ws_message = json.dumps({"command": command, "value": value})
-            for ws in storage.websockets or []:
-                ws.write_message(ws_message)
+
+            if command:
+                ws_message = json.dumps({"command": command, "value": value})
+                for ws in storage.websockets or []:
+                    ws.write_message(ws_message)
 
     except Exception as e:
         log(e)
@@ -127,7 +131,7 @@ def tcp_client_coroutine():
             ws.write_message(ws_message)
         time.sleep(1)
         log('Trying to reconnect to Lamp Server')
-        ioloop.IOLoop.current().spawn_callback(tcp_client)
+        ioloop.IOLoop.current().spawn_callback(tcp_client_coroutine)
 
 
 #
@@ -169,6 +173,10 @@ class LampAdminHandler(web.RequestHandler):
         for stream in storage.lamp_server.get_active_streams():
             message = LampProtocol.message(command, value)
             stream.write(message)
+
+    def method_send_unknown(self):
+        for stream in storage.lamp_server.get_active_streams():
+            stream.write(b'\xff\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00')
 
 
 class LampServer(TCPServer):
