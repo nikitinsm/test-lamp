@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>tornado WebSocket example</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+</head>
+<body>
+
+<div style="background-color: #000; margin: 20px 35%; padding: 10px;">
+    <h1 class="text-center">
+        <i id="lamp" style="color: #333;" class="glyphicon glyphicon-lamp"></i>
+    </h1>
+</div>
+
+<p class="text-center">
+    status: <span id="message"></span>
+</p>
+
+
+<div class="well text-center" style="margin: 20px">
+    <h3>DEBUG</h3>
+
+    <div class="form-group">
+        <div class="btn-group" role="group" aria-label="...">
+            <button class="btn btn-success" onclick="sendCommand('ON', null)">ON</button>
+            <button class="btn btn-danger" onclick="sendCommand('OFF', null)">OFF</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+    <span class="input-group-btn">
+    <button class="btn btn-default" onclick="sendCommand('COLOR', getColor())">COLOR</button>
+    </span>
+        <input type="color" id="color" value="#ffffff"/>
+    </div>
+</div>
+
+
+</div>
+
+<script>
+    var host = window.location.host;
+    var color = '#ffffff';
+
+    function getColor() {
+        var result = $('#color').val().replace('#', '');
+        console.log(result);
+        return result;
+    }
+
+    function sendCommand(command, value) {
+        var data = {
+            "method": "message",
+            "params": {
+                "command": command,
+                "value": value
+            }
+        };
+        data = JSON.stringify(data);
+        $.post('http://' + window.location.hostname + ':9000/', data);
+    }
+
+    function openWs() {
+        while (true) {
+            try {
+                return new WebSocket('ws://' + host + '/ws');
+            } catch (err) {
+                console.log('Waiting socket');
+                setTimeout(1000);
+            }
+        }
+    }
+
+    var ws = openWs();
+    var $message = $('#message');
+    var $lamp = $('#lamp');
+
+
+    ws.onclose = function () {
+        $message.attr("class", 'label label-danger');
+        $message.text('closed');
+    };
+
+    ws.onerror = ws.onclose;
+
+    ws.onopen = function () {
+        $message.attr("class", 'label label-success');
+        $message.text('open');
+    };
+
+    ws.onmessage = function (ev) {
+        var json = JSON.parse(ev.data);
+        var message_text = 'open';
+        var message_status = 'success';
+
+        switch (json.command) {
+            case "CLOSE":
+                message_text = json['value'];
+                message_status = 'danger';
+                break;
+            case "OPEN":
+                break;
+            case "ON":
+                $lamp.css('color', color);
+                break;
+            case "OFF":
+                $lamp.css('color', '#000');
+                break;
+            case "COLOR":
+                color = '#' + json['value'];
+                $('#color').val(color);
+                $lamp.css('color', color);
+                break;
+            default:
+                message_text = ev.data;
+        }
+
+        $message.attr("class", 'label label-' + message_status);
+        $message.text(message_text);
+
+    };
+</script>
+</body>

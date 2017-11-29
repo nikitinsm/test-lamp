@@ -1,0 +1,37 @@
+version: '2'
+services:
+  client1:
+    build: .
+    command: ["lamp", "client"]
+    ports:
+    - "8888:8888" # WS Frontend and TCP client
+    links:
+    - "server"
+    env_file:
+    - docker-compose.env
+  client2:
+    build: .
+    command: ["lamp", "client"]
+    ports:
+    - "8889:8888" # WS Frontend and TCP client
+    links:
+    - "server"
+    env_file:
+    - docker-compose.env
+  client3:
+    build: .
+    command: ["lamp", "client"]
+    ports:
+    - "8890:8888" # WS Frontend and TCP client
+    links:
+    - "server"
+    env_file:
+    - docker-compose.env
+  server:
+    build: .
+    command: ["lamp", "server"]
+    ports:
+    - "9999:9999" # Lamp server emulated
+    - "9000:9000" # Lamp json-messaging admin interface
+    env_file:
+    - docker-compose.env
