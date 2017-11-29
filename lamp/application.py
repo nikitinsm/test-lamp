@@ -76,7 +76,7 @@ class SocketHandler(websocket.WebSocketHandler):
         storage.websockets.add(self)
 
     def on_message(self, message):
-        self.write_message(u"You said: " + message)
+        pass
 
     def on_close(self):
         log("WebSocket closed")
